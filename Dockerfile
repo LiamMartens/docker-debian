@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM debian:stretch
 LABEL maintainer="Liam Martens <hi@liammartens.com>"
 
 # @arg USER This will contain the name of the non-root user that will be added
@@ -28,18 +28,20 @@ ONBUILD ENV LOCALE=${LOCALE:-en_US.UTF-8}
 ONBUILD ENV ENCODING=${ENCODING:-UTF-8}
 # @env LC_ALL
 ONBUILD ENV LC_ALL=${LOCALE}
+# @env DEBIAN_FRONTEND
+ONBUILD ENV DEBIAN_FRONTEND=noninteractive
 
 # @run Update the alpine image
-ONBUILD RUN apk update && apk upgrade
+ONBUILD RUN apt-get update && apt-get upgrade -y
 
 # @run Add default packages
-ONBUILD RUN apk add tzdata perl curl bash nano git supervisor
+ONBUILD RUN apt-get install -y tzdata perl curl bash nano git supervisor
 
 # @run Add group
-ONBUILD RUN addgroup -g ${ID} ${USER}
+ONBUILD RUN addgroup -gid ${ID} ${USER}
 
 # @run Add the non-root user
-ONBUILD RUN adduser -D -G ${USER} -u ${ID} ${USER}
+ONBUILD RUN adduser --disabled-password --uid ${ID} --ingroup ${USER} --gecos "" ${USER}
 
 # @run Create the timezone files
 ONBUILD RUN touch /etc/timezone /etc/localtime
@@ -72,7 +74,7 @@ ENV PATH=${PATH}:${DOCKER_BIN_DIR}
 RUN mkdir -p ${DOCKER_DIR} ${DOCKER_PROVISION_DIR} ${DOCKER_ETC_DIR} ${DOCKER_BIN_DIR} ${DOCKER_TMP_DIR}
 
 # @copy Copy .docker file(s)
-COPY .docker/ ${DOCKER_DIR}
+COPY docker-alpine/.docker/ ${DOCKER_DIR}
 
 # @run chown and chmod .docker directory
 ONBUILD RUN chown -R ${USER}:${USER} ${DOCKER_DIR}
