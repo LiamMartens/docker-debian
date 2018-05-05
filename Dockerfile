@@ -22,12 +22,6 @@ ONBUILD ENV ID=${ID:-1000}
 ONBUILD ENV SHELL=${SHELL:-/bin/bash}
 # @env TIMEZONE The timezone to use
 ONBUILD ENV TIMEZONE=${TIMEZONE:-UTC}
-# @env LOCALE The locale
-ONBUILD ENV LOCALE=${LOCALE:-en_US.UTF-8}
-# @env ENCODING The encoding
-ONBUILD ENV ENCODING=${ENCODING:-UTF-8}
-# @env LC_ALL
-ONBUILD ENV LC_ALL=${LOCALE}
 # @env DEBIAN_FRONTEND
 ONBUILD ENV DEBIAN_FRONTEND=noninteractive
 
@@ -35,7 +29,7 @@ ONBUILD ENV DEBIAN_FRONTEND=noninteractive
 ONBUILD RUN apt-get update && apt-get upgrade -y
 
 # @run Add default packages
-ONBUILD RUN apt-get install -y tzdata perl curl bash nano git supervisor
+ONBUILD RUN apt-get install -y tzdata perl curl bash nano git supervisor locales
 
 # @run Add group
 ONBUILD RUN addgroup -gid ${ID} ${USER}
@@ -53,11 +47,18 @@ ONBUILD RUN chown ${USER}:${USER} /etc/timezone /etc/localtime
 ONBUILD RUN cat /usr/share/zoneinfo/${TIMEZONE} > /etc/localtime
 ONBUILD RUN echo ${TIMEZONE} > /etc/timezone
 
+# @env LOCALE The locale
+ONBUILD ENV LOCALE=${LOCALE:-en_US.UTF-8}
+# @env ENCODING The encoding
+ONBUILD ENV ENCODING=${ENCODING:-UTF-8}
+
 # @run Set locale
 ONBUILD RUN echo "${LOCALE} ${ENCODING}" > /etc/locale.gen && \
     locale-gen ${LOCALE} && \
     dpkg-reconfigure locales && \
     /usr/sbin/update-locale LANG=${LOCALE}
+# @env LC_ALL
+ONBUILD ENV LC_ALL=${LOCALE}
 
 # @arg DOCKER_DIR The docker scripts directory
 ARG DOCKER_DIR
