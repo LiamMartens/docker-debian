@@ -1,0 +1,3 @@
+[submodule "docker-alpine"]
+	path = docker-alpine
+	url = https://github.com/LiamMartens/docker-alpine.git
