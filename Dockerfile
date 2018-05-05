@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM alpine:3.7
 LABEL maintainer="Liam Martens <hi@liammartens.com>"
 
 # @arg USER This will contain the name of the non-root user that will be added
@@ -9,6 +9,10 @@ ONBUILD ARG ID
 ONBUILD ARG SHELL
 # @arg TIMEZONE The timezone to use in the container
 ONBUILD ARG TIMEZONE
+# @arg LOCALE The locale to use
+ONBUILD ARG LOCALE
+# @arg ENCODING The encoding to use
+ONBUILD ARG ENCODING
 
 # @env USER This will contain the name of the non-root user that will be added
 ONBUILD ENV USER=${USER:-user}
@@ -18,20 +22,24 @@ ONBUILD ENV ID=${ID:-1000}
 ONBUILD ENV SHELL=${SHELL:-/bin/bash}
 # @env TIMEZONE The timezone to use
 ONBUILD ENV TIMEZONE=${TIMEZONE:-UTC}
-# @env DEBIAN_FRONTEND
-ONBUILD ENV DEBIAN_FRONTEND=noninteractive
+# @env LOCALE The locale
+ONBUILD ENV LOCALE=${LOCALE:-en_US.UTF-8}
+# @env ENCODING The encoding
+ONBUILD ENV ENCODING=${ENCODING:-UTF-8}
+# @env LC_ALL
+ONBUILD ENV LC_ALL=${LOCALE}
 
 # @run Update the alpine image
-ONBUILD RUN apt-get update && apt-get upgrade -y
+ONBUILD RUN apk update && apk upgrade
 
 # @run Add default packages
-ONBUILD RUN apt-get install -y tzdata perl curl bash nano git supervisor
+ONBUILD RUN apk add tzdata perl curl bash nano git supervisor
 
 # @run Add group
-ONBUILD RUN addgroup -gid ${ID} ${USER}
+ONBUILD RUN addgroup -g ${ID} ${USER}
 
 # @run Add the non-root user
-ONBUILD RUN adduser --disabled-password --uid ${ID} --ingroup ${USER} --gecos "" ${USER}
+ONBUILD RUN adduser -D -G ${USER} -u ${ID} ${USER}
 
 # @run Create the timezone files
 ONBUILD RUN touch /etc/timezone /etc/localtime
@@ -42,6 +50,12 @@ ONBUILD RUN chown ${USER}:${USER} /etc/timezone /etc/localtime
 # @run Save timezone data
 ONBUILD RUN cat /usr/share/zoneinfo/${TIMEZONE} > /etc/localtime
 ONBUILD RUN echo ${TIMEZONE} > /etc/timezone
+
+# @run Set locale
+ONBUILD RUN echo "${LOCALE} ${ENCODING}" > /etc/locale.gen && \
+    locale-gen ${LOCALE} && \
+    dpkg-reconfigure locales && \
+    /usr/sbin/update-locale LANG=${LOCALE}
 
 # @arg DOCKER_DIR The docker scripts directory
 ARG DOCKER_DIR
@@ -58,7 +72,7 @@ ENV PATH=${PATH}:${DOCKER_BIN_DIR}
 RUN mkdir -p ${DOCKER_DIR} ${DOCKER_PROVISION_DIR} ${DOCKER_ETC_DIR} ${DOCKER_BIN_DIR} ${DOCKER_TMP_DIR}
 
 # @copy Copy .docker file(s)
-COPY docker-alpine/.docker/ ${DOCKER_DIR}
+COPY .docker/ ${DOCKER_DIR}
 
 # @run chown and chmod .docker directory
 ONBUILD RUN chown -R ${USER}:${USER} ${DOCKER_DIR}
