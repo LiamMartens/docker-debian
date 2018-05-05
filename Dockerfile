@@ -57,6 +57,7 @@ ONBUILD RUN echo "${LOCALE} ${ENCODING}" > /etc/locale.gen && \
     locale-gen ${LOCALE} && \
     dpkg-reconfigure locales && \
     /usr/sbin/update-locale LANG=${LOCALE}
+
 # @env LC_ALL
 ONBUILD ENV LC_ALL=${LOCALE}
 
