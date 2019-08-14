@@ -1,5 +1,5 @@
 # Debian base image
-This is a base debian stretch image
+This is a base debian buster image
 
 ## Build arguments
 * `USER`: The non-root user to add during the build (`user` by default)
