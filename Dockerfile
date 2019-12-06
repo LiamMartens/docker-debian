@@ -44,7 +44,7 @@ ONBUILD RUN touch /etc/timezone /etc/localtime
 ONBUILD RUN chown ${USER}:${USER} /etc/timezone /etc/localtime
 
 # @run Save timezone data
-ONBUILD RUN cat /usr/share/zoneinfo/${TIMEZONE} > /etc/localtime
+ONBUILD RUN ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 ONBUILD RUN echo ${TIMEZONE} > /etc/timezone
 
 # @env LOCALE The locale
